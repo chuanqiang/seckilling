@@ -4,7 +4,9 @@ import com.zcq.seckilling.domain.LoginVo;
 import com.zcq.seckilling.domain.User;
 import com.zcq.seckilling.redis.RedisService;
 import com.zcq.seckilling.result.Result;
+import com.zcq.seckilling.service.GoodsService;
 import com.zcq.seckilling.service.MiaoshaUserService;
+import com.zcq.seckilling.vo.GoodsVo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.xml.ws.soap.Addressing;
+import java.util.List;
 
 
 /**
@@ -58,14 +61,4 @@ public class LoginController {
 		model.addAttribute("user", user);
 		return "good_list";
 	}*/
-
-	@RequestMapping(value = "tp_list")
-	public String toList(Model model, User user){
-		if (user != null) {
-			model.addAttribute("user", user);
-		}else{
-			return "redirect:/login/to_login";
-		}
-		return "good_list";
-	}
 }

@@ -10,6 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class RedisService {
@@ -20,11 +27,11 @@ public class RedisService {
 	private JedisPool jedisPool;
 
 	/**
-	* @Description: 获取单个对象
-	* @Method: get
-	* @Author: zcq
-	* @Date: 2018/7/1 下午4:27
-	*/
+	 * @Description: 获取单个对象
+	 * @Method: get
+	 * @Author: zcq
+	 * @Date: 2018/7/1 下午4:27
+	 */
 	public <T> T get(KeyPrefix prefix, String key, Class<T> clazz) {
 		Jedis jedis = null;
 		try {
@@ -38,13 +45,32 @@ public class RedisService {
 			returnToPool(jedis);
 		}
 	}
-	
-	/** 
-	* @Description: 设置对象 
-	* @Method: set 
-	* @Author: zcq
-	* @Date: 2018/7/1 下午4:27 
-	*/
+
+	/**
+	 * @Description: 放置到set中
+	 * @Author: zcq
+	 * @Date: 2018/8/14 下午4:36
+	 */
+	public <T> T getSet(KeyPrefix prefix, String key, String value, Class<T> clazz) {
+		Jedis jedis = null;
+		try {
+			// 生成真正的key
+			String realKey = prefix.getPrefix() + key;
+			jedis = jedisPool.getResource();
+			String str = jedis.getSet(realKey,value);
+			T t = stringToBean(str, clazz);
+			return t;
+		} finally {
+			returnToPool(jedis);
+		}
+	}
+
+	/**
+	 * @Description: 设置对象
+	 * @Method: set
+	 * @Author: zcq
+	 * @Date: 2018/7/1 下午4:27
+	 */
 	public <T> boolean set(KeyPrefix prefix, String key, T value) {
 		Jedis jedis = null;
 		try {
@@ -68,13 +94,35 @@ public class RedisService {
 	}
 
 	/**
-	* @Description: 放置对象
-	* @Method: put
-	* @Author: zcq
-	* @Date: 2018/7/2 下午2:15
-	 * @param key key
+	 * @Description: 设置对象到set
+	 * @Author: zcq
+	 * @Date: 2018/7/1 下午4:27
+	 */
+	public <T> boolean setSet(KeyPrefix prefix, String key, T value) {
+		Jedis jedis = null;
+		try {
+			jedis = jedisPool.getResource();
+			String str = beanToString(value);
+			if (str == null || str.length() <= 0) {
+				return false;
+			}
+			// 生成真正的key
+			String realKey = prefix.getPrefix() + key;
+			jedis.sadd(realKey, str);
+			return true;
+		} finally {
+			returnToPool(jedis);
+		}
+	}
+
+	/**
+	 * @param key     key
 	 * @param seconds 存活时间
-	*/
+	 * @Description: 放置对象
+	 * @Method: put
+	 * @Author: zcq
+	 * @Date: 2018/7/2 下午2:15
+	 */
 	public <T> void put(String key, T value, Integer seconds) {
 		Jedis jedis = null;
 		try {
@@ -128,6 +176,71 @@ public class RedisService {
 	}
 
 	/**
+	 * 删除
+	 */
+	public boolean delete(KeyPrefix prefix, String key) {
+		Jedis jedis = null;
+		try {
+			jedis = jedisPool.getResource();
+			//生成真正的key
+			String realKey = prefix.getPrefix() + key;
+			long ret = jedis.del(realKey);
+			return ret > 0;
+		} finally {
+			returnToPool(jedis);
+		}
+	}
+
+	public boolean delete(KeyPrefix prefix) {
+		if(prefix == null) {
+			return false;
+		}
+		List<String> keys = scanKeys(prefix.getPrefix());
+		if(keys==null || keys.size() <= 0) {
+			return true;
+		}
+		Jedis jedis = null;
+		try {
+			jedis = jedisPool.getResource();
+			jedis.del(keys.toArray(new String[0]));
+			return true;
+		} catch (final Exception e) {
+			e.printStackTrace();
+			return false;
+		} finally {
+			if(jedis != null) {
+				jedis.close();
+			}
+		}
+	}
+
+	public List<String> scanKeys(String key) {
+		Jedis jedis = null;
+		try {
+			jedis = jedisPool.getResource();
+			List<String> keys = new ArrayList<String>();
+			String cursor = "0";
+			ScanParams sp = new ScanParams();
+			sp.match("*"+key+"*");
+			sp.count(100);
+			do{
+				ScanResult<String> ret = jedis.scan(cursor, sp);
+				List<String> result = ret.getResult();
+				if(result!=null && result.size() > 0){
+					keys.addAll(result);
+				}
+				//再处理cursor
+				cursor = ret.getStringCursor();
+			}while(!cursor.equals("0"));
+			return keys;
+		} finally {
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+	}
+
+	/**
 	 * @Description: 增加值
 	 * @Method: incr
 	 * @Author: zcq
@@ -163,7 +276,7 @@ public class RedisService {
 		}
 	}
 
-	private <T> String beanToString(T value) {
+	public static  <T> String beanToString(T value) {
 		if (value == null) {
 			return null;
 		}
@@ -179,7 +292,7 @@ public class RedisService {
 		}
 	}
 
-	private <T> T stringToBean(String str, Class<T> clazz) {
+	public static <T> T stringToBean(String str, Class<T> clazz) {
 		if (str == null || str.length() <= 0) {
 			return null;
 		}
@@ -198,5 +311,31 @@ public class RedisService {
 		if (jedis != null) {
 			jedis.close();
 		}
+	}
+
+	/**
+	 * @Description: 统计pv(page count)
+	 * @Author: zcq
+	 * @Date: 2018/8/14 下午3:53
+	 */
+	public Long getPv(String pageUrl) {
+		new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		Long pv = this.get(CountKey.getPv, "_" + pageUrl + "_" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()), Long.class);
+		if (pv != null) {
+			pv = this.incr(CountKey.getPv, "_" + pageUrl + "_" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+		} else {
+			this.set(CountKey.getPv, "_" + pageUrl + "_" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()), 0);
+		}
+		return pv;
+	}
+
+	/**
+	 * @Description: 统计uv(user count)
+	 * @Author: zcq
+	 * @Date: 2018/8/14 下午3:53
+	 */
+	public void getUv(String user) {
+		new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		this.set(CountKey.getUv, "_" + user + "_" + new SimpleDateFormat("yyyy-MM-dd").format(new Date()), user);
 	}
 }

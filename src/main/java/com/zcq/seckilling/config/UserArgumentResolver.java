@@ -1,5 +1,6 @@
 package com.zcq.seckilling.config;
 
+import com.zcq.seckilling.access.UserContext;
 import com.zcq.seckilling.domain.MiaoshaUser;
 import com.zcq.seckilling.service.MiaoshaUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
 	/**
 	 *  当支持后进行相应的转换
 	 */
-	@Override
+	/*@Override
 	public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
 		HttpServletRequest request = nativeWebRequest.getNativeRequest(HttpServletRequest.class);
 		HttpServletResponse response = nativeWebRequest.getNativeResponse(HttpServletResponse.class);
@@ -46,23 +47,27 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
 		}
 		String token = StringUtils.isEmpty(paramToken) ? cookieToken : paramToken;
 		return userService.getByToken(response, token);
-	}
+	}*/
 
 	/**
 	 * 获取cookie
-	 * @param request
-	 * @param cookieNameToken
 	 * @return
 	 */
-	private String getCookieValue(HttpServletRequest request, String cookieNameToken) {
+	/*private String getCookieValue(HttpServletRequest request, String cookieNameToken) {
 		Cookie[] cookies = request.getCookies();
-		if (cookies != null) {
-			for (Cookie cookie : cookies) {
-				if (cookieNameToken.equals(cookie.getName())) {
-					return cookie.getValue();
-				}
+		if (cookies == null || cookies.length <= 0) {
+			return null;
+		}
+		for (Cookie cookie : cookies) {
+			if (cookieNameToken.equals(cookie.getName())) {
+				return cookie.getValue();
 			}
 		}
 		return null;
+	}*/
+
+	public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+	                              NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+		return UserContext.getUser();
 	}
 }

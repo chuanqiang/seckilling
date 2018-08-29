@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
 			String msg = error.getDefaultMessage();
 			return Result.error(CodeMsg.BIND_ERROR.fillArgs(msg));
 		} else {
-			return Result.error(CodeMsg.SERVICE_ERROR);
+			return Result.error(CodeMsg.SERVER_ERROR);
 		}
 	}
 }

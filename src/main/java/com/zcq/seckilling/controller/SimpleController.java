@@ -1,6 +1,7 @@
 package com.zcq.seckilling.controller;
 
 import com.zcq.seckilling.domain.User;
+import com.zcq.seckilling.rabbitmq.MQSender;
 import com.zcq.seckilling.redis.RedisService;
 import com.zcq.seckilling.redis.UserKey;
 import com.zcq.seckilling.result.CodeMsg;
@@ -25,6 +26,8 @@ public class SimpleController {
 
 	@Autowired
 	private RedisService redisService;
+	@Autowired
+	private MQSender sender;
 
 	@RequestMapping("/hello")
 	public Result<String> hello(){
@@ -33,7 +36,7 @@ public class SimpleController {
 
 	@RequestMapping("/helloError")
 	public Result<String> helloError(){
-		return Result.error(CodeMsg.SERVICE_ERROR);
+		return Result.error(CodeMsg.SERVER_ERROR);
 	}
 
 	@RequestMapping("/thymeleaf")
@@ -64,4 +67,28 @@ public class SimpleController {
 		User user = new User(2, "1234");
 		redisService.put(UserKey.getById+"", user,60);
 	}
+
+	/*@RequestMapping("/mq")
+	public Result<String> sendMq() {
+		sender.send("Hello world");
+		return Result.success("hello,zcq");
+	}
+
+	@RequestMapping("/mq/topic")
+	public Result<String> sendTopicMq() {
+		sender.sendTopic("Hello world");
+		return Result.success("hello,zcq");
+	}
+
+	@RequestMapping("/mq/fanout")
+	public Result<String> sendFanoutMq() {
+		sender.sendFanout("Hello world");
+		return Result.success("hello,zcq");
+	}
+
+	@RequestMapping("/mq/header")
+	public Result<String> sendHeaderMq() {
+		sender.sendHeader("Hello world header");
+		return Result.success("hello,zcq");
+	}*/
 }
