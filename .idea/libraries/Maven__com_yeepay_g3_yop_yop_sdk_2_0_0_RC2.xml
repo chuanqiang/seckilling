@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.yeepay.g3.yop:yop-sdk:2.0.0-RC2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/yeepay/g3/yop/yop-sdk/2.0.0-RC2/yop-sdk-2.0.0-RC2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/yeepay/g3/yop/yop-sdk/2.0.0-RC2/yop-sdk-2.0.0-RC2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/yeepay/g3/yop/yop-sdk/2.0.0-RC2/yop-sdk-2.0.0-RC2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
