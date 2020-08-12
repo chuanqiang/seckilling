@@ -13,7 +13,7 @@ import java.util.List;
  * @author zhangchuanqiang
  */
 @Configuration
-public class WebConifg extends WebMvcConfigurerAdapter {
+public class WebConfig extends WebMvcConfigurerAdapter {
 	@Autowired
 	UserArgumentResolver userArgumentResolver;
 
